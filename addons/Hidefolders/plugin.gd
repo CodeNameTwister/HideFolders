@@ -81,6 +81,7 @@ func _explore(item : TreeItem) -> void:
 
 		if v_flag == false:
 			_flg_totals += 1
+			item.collapsed = true
 			if _flg_totals >= _buffer.size():
 				return
 		else:
@@ -91,6 +92,13 @@ func _explore(item : TreeItem) -> void:
 		_explore(i)
 
 func get_buffer() -> Dictionary: return _buffer
+
+func _on_collapsed(i : TreeItem) -> void:
+	var v : Variant = i.get_metadata(0)
+	if _buffer.has(v):
+		for _i : TreeItem in i.get_children():
+			_i.visible = false
+		i.collapsed = true
 
 func _enter_tree() -> void:
 	_setup()
@@ -103,6 +111,8 @@ func _enter_tree() -> void:
 	var fs : EditorFileSystem = EditorInterface.get_resource_filesystem()
 	_n(dock)
 
+	_tree.item_collapsed.connect(_on_collapsed)
+
 	add_context_menu_plugin(EditorContextMenuPlugin.CONTEXT_SLOT_FILESYSTEM, _menu_service)
 
 	dock.folder_moved.connect(_moved_callback)
@@ -114,6 +124,15 @@ func _exit_tree() -> void:
 	if is_instance_valid(_menu_service):
 		remove_context_menu_plugin(_menu_service)
 		_menu_service.ref_plug = null
+
+	var dock : FileSystemDock = EditorInterface.get_file_system_dock()
+	var fs : EditorFileSystem = EditorInterface.get_resource_filesystem()
+	if dock.folder_moved.is_connected(_moved_callback):
+		dock.folder_moved.disconnect(_moved_callback)
+	if dock.folder_removed.is_connected(_remove_callback):
+		dock.folder_removed.disconnect(_remove_callback)
+	if fs.filesystem_changed.is_connected(_def_update):
+		fs.filesystem_changed.disconnect(_def_update)
 
 	#region user_dat
 	var cfg : ConfigFile = ConfigFile.new()
