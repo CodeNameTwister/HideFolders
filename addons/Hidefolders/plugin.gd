@@ -9,7 +9,10 @@ extends EditorPlugin
 	#"version": "1.0.1.1"
 #}
 
+const HIDE_ICON : Texture = preload("res://addons/Hidefolders/images/GuiVisibilityXray.svg")
 const DOT_USER : String = "user://editor/hiddenfolders.dat"
+
+var default_icon : Texture = null
 
 var _buffer : Dictionary = {}
 var _flg_totals : int = 0
@@ -80,9 +83,26 @@ func _explore(item : TreeItem) -> void:
 		if v_flag == false:
 			_flg_totals += 1
 			item.collapsed = true
+			if null == default_icon:
+				var tex : Texture = item.get_icon(0)
+				if tex != HIDE_ICON:
+					default_icon = tex
+			var c : Color = item.get_icon_modulate(0)
+			c.a = 0.5
+			item.set_icon_overlay(0, HIDE_ICON)
+			item.set_custom_color(0, Color.DARK_GRAY)
+			item.set_icon_modulate(0,c)
+			#item.set_icon(0, HIDE_ICON)
 			if _flg_totals >= _buffer.size():
 				return
 		else:
+			if null != default_icon:
+				item.set_icon(0, default_icon)
+			var c : Color = item.get_icon_modulate(0)
+			c.a = 1.0
+			item.set_custom_color(0, Color.WHITE)
+			item.set_icon_modulate(0, c)
+			item.set_icon_overlay(0, null)
 			_buffer.erase(meta)
 			return
 
@@ -91,20 +111,19 @@ func _explore(item : TreeItem) -> void:
 
 func get_buffer() -> Dictionary: return _buffer
 
-func _on_collapsed(i : TreeItem) -> void:
-	var v : Variant = i.get_metadata(0)
+func _on_collapsed(item : TreeItem) -> void:
+	var v : Variant = item.get_metadata(0)
 	if _buffer.has(v):
-		for _i : TreeItem in i.get_children():
+		for _i : TreeItem in item.get_children():
 			_i.visible = false
-		i.collapsed = true
+		item.collapsed = true
+		var c : Color = item.get_icon_modulate(0)
+		c.a = 0.5
+		item.set_icon_overlay(0, HIDE_ICON)
+		item.set_custom_color(0, Color.DARK_GRAY)
+		item.set_icon_modulate(0,c)
 
-func _enter_tree() -> void:
-	_setup()
-
-	_menu_service = ResourceLoader.load("res://addons/Hidefolders/menu_item.gd").new()
-	_menu_service.ref_plug = self
-	_menu_service.hide_folders.connect(_on_hidde_cmd)
-
+func _ready() -> void:
 	var dock : FileSystemDock = EditorInterface.get_file_system_dock()
 	var fs : EditorFileSystem = EditorInterface.get_resource_filesystem()
 	_n(dock)
@@ -115,8 +134,18 @@ func _enter_tree() -> void:
 
 	dock.folder_moved.connect(_moved_callback)
 	dock.folder_removed.connect(_remove_callback)
+	dock.folder_color_changed.connect(_def_update)
 	fs.filesystem_changed.connect(_def_update)
 	_def_update()
+
+func _enter_tree() -> void:
+	_setup()
+
+	_menu_service = ResourceLoader.load("res://addons/Hidefolders/menu_item.gd").new()
+	_menu_service.ref_plug = self
+	_menu_service.hide_folders.connect(_on_hidde_cmd)
+
+
 
 func _exit_tree() -> void:
 	if is_instance_valid(_menu_service):
@@ -129,6 +158,8 @@ func _exit_tree() -> void:
 		dock.folder_moved.disconnect(_moved_callback)
 	if dock.folder_removed.is_connected(_remove_callback):
 		dock.folder_removed.disconnect(_remove_callback)
+	if dock.folder_color_changed.is_connected(_def_update):
+		dock.folder_color_changed.disconnect(_def_update)
 	if fs.filesystem_changed.is_connected(_def_update):
 		fs.filesystem_changed.disconnect(_def_update)
 
