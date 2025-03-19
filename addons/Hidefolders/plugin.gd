@@ -6,7 +6,7 @@ extends EditorPlugin
 	#"description": "HideFolders addon for godot 4",
 	#"license": "https://spdx.org/licenses/MIT",
 	#"name": "Twister",
-	#"version": "1.0.1.1"
+	#"version": "1.0.2"
 #}
 
 const HIDE_ICON : Texture = preload("res://addons/Hidefolders/images/GuiVisibilityXray.svg")

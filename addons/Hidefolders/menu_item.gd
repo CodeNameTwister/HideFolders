@@ -5,10 +5,10 @@ extends EditorContextMenuPlugin
 	#"description": "HideFolders addon for godot 4",
 	#"license": "https://spdx.org/licenses/MIT",
 	#"name": "Twister",
-	#"version": "1.0.0"
+	#"version": "1.0.2"
 #}
 #region godotengine_repository_icons
-const HIDDE_ICON : Texture = preload("res://addons/Hidefolders/images/GuiVisibilityHidden.svg")
+const HIDE_ICON : Texture = preload("res://addons/Hidefolders/images/GuiVisibilityHidden.svg")
 const VISIBLE_ICON : Texture = preload("res://addons/Hidefolders/images/GuiVisibilityVisible.svg")
 const TOGGLE_ICON : Texture = preload("res://addons/Hidefolders/images/GuiVisibilityXray.svg")
 #endregion
@@ -40,7 +40,7 @@ func _popup_menu(paths: PackedStringArray) -> void:
 		elif is_visible:
 			add_context_menu_item("{0} {1}".format([tr("hide"),tr("folder")]), _on_hide_cmd, VISIBLE_ICON)
 		else:
-			add_context_menu_item("{0} {1}".format([tr("show"),tr("folder")]), _on_hide_cmd, HIDDE_ICON)
+			add_context_menu_item("{0} {1}".format([tr("show"),tr("folder")]), _on_hide_cmd, HIDE_ICON)
 
 func _on_hide_cmd(paths : PackedStringArray) -> void:
 	hide_folders.emit(paths)
