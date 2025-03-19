@@ -5,7 +5,7 @@ extends EditorContextMenuPlugin
 	#"description": "HideFolders addon for godot 4",
 	#"license": "https://spdx.org/licenses/MIT",
 	#"name": "Twister",
-	#"version": "1.0.0"
+	#"version": "1.0.1"
 #}
 #region godotengine_repository_icons
 const HIDDE_ICON : Texture = preload("res://addons/Hidefolders/images/GuiVisibilityHidden.svg")
