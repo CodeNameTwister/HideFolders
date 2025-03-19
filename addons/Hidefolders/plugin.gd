@@ -6,7 +6,7 @@ extends EditorPlugin
 	#"description": "HideFolders addon for godot 4",
 	#"license": "https://spdx.org/licenses/MIT",
 	#"name": "Twister",
-	#"version": "1.0.0"
+	#"version": "1.0.1.1"
 #}
 
 const DOT_USER : String = "user://editor/hiddenfolders.dat"
@@ -26,9 +26,7 @@ func _setup() -> void:
 	if FileAccess.file_exists(DOT_USER):
 		var cfg : ConfigFile = ConfigFile.new()
 		if OK != cfg.load(DOT_USER):return
-		var svd : Dictionary = cfg.get_value("DAT", "PTH", {})
-		for k : String in svd.keys():
-			_buffer[k] = true
+		_buffer = cfg.get_value("DAT", "PTH", {})
 
 #region callbacks
 func _moved_callback(a : String, b : String ) -> void:
