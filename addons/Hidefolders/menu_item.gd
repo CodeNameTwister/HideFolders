@@ -35,7 +35,7 @@ func _popup_menu(paths: PackedStringArray) -> void:
 				is_visible = true
 
 	if _process:
-		# gg tranlsation in tool
+		# The translation in tool mode doesn't seem to work at the moment, I'll leave the code anyway.
 		var locale : String = OS.get_locale_language()
 		var translation: Translation = TranslationServer.get_translation_object(locale)
 		if is_visible and is_hided:
