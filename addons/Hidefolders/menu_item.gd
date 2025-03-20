@@ -35,12 +35,23 @@ func _popup_menu(paths: PackedStringArray) -> void:
 				is_visible = true
 
 	if _process:
+		# gg tranlsation in tool
+		var locale : String = OS.get_locale_language()
+		var translation: Translation = TranslationServer.get_translation_object(locale)
 		if is_visible and is_hided:
-			add_context_menu_item("{0} {1}".format([tr("toggle"),tr("folder")]), _on_hide_cmd, TOGGLE_ICON)
+			add_context_menu_item("{0} {1}".format([_get_tr(translation,&"Toggle"), _get_tr(translation,&"Folder")]).capitalize(), _on_hide_cmd, TOGGLE_ICON)
 		elif is_visible:
-			add_context_menu_item("{0} {1}".format([tr("hide"),tr("folder")]), _on_hide_cmd, VISIBLE_ICON)
+			add_context_menu_item("{0} {1}".format([_get_tr(translation,&"Hide"), _get_tr(translation,&"Folder")]).capitalize(), _on_hide_cmd, VISIBLE_ICON)
 		else:
-			add_context_menu_item("{0} {1}".format([tr("show"),tr("folder")]), _on_hide_cmd, HIDE_ICON)
+			add_context_menu_item("{0} {1}".format([_get_tr(translation,&"Show"), _get_tr(translation,&"Folder")]).capitalize(), _on_hide_cmd, HIDE_ICON)
 
 func _on_hide_cmd(paths : PackedStringArray) -> void:
 	hide_folders.emit(paths)
+
+func _get_tr(translation : Translation, msg : StringName) -> StringName:
+	if translation == null:
+		return msg
+	var new_msg : StringName = translation.get_message(msg)
+	if new_msg.is_empty():
+		return msg
+	return new_msg
