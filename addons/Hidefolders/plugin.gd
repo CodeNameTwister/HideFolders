@@ -1,14 +1,11 @@
 @tool
 extends EditorPlugin
-#{
-	#"type": "plugin",
-	#"codeRepository": "https://github.com/CodeNameTwister",
-	#"description": "HideFolders addon for godot 4",
-	#"license": "https://spdx.org/licenses/MIT",
-	#"name": "Twister",
-	#"version": "1.0.2.2"
-#}
-
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+#	Hide Folders
+#
+#	https://github.com/CodeNameTwister/HideFolders
+#	author:	"Twister"
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 const HIDE_ICON : Texture = preload("res://addons/Hidefolders/images/GuiVisibilityXray.svg")
 const DOT_USER : String = "user://editor/hiddenfolders.dat"
 
@@ -86,6 +83,7 @@ func _explore(item : TreeItem) -> void:
 			item.set_icon_overlay(0, HIDE_ICON)
 			item.set_custom_color(0, Color.DARK_GRAY)
 			item.set_icon_modulate(0,c)
+			#TODO: Ignore totals and return now
 			if _flg_totals >= _buffer.size():
 				return
 		else:

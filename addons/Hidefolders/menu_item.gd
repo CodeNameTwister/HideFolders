@@ -1,19 +1,17 @@
 extends EditorContextMenuPlugin
-#{
-	#"type": "plugin",
-	#"codeRepository": "https://github.com/CodeNameTwister",
-	#"description": "HideFolders addon for godot 4",
-	#"license": "https://spdx.org/licenses/MIT",
-	#"name": "Twister",
-	#"version": "1.0.2.2"
-#}
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+#	Hide Folders
+#
+#	https://github.com/CodeNameTwister/HideFolders
+#	author:	"Twister"
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #region godotengine_repository_icons
 const HIDE_ICON : Texture = preload("res://addons/Hidefolders/images/GuiVisibilityHidden.svg")
 const VISIBLE_ICON : Texture = preload("res://addons/Hidefolders/images/GuiVisibilityVisible.svg")
 const TOGGLE_ICON : Texture = preload("res://addons/Hidefolders/images/GuiVisibilityXray.svg")
 #endregion
 
-signal hide_folders(path)
+signal hide_folders(path : PackedStringArray)
 
 var ref_plug : EditorPlugin = null
 
@@ -31,8 +29,10 @@ func _popup_menu(paths: PackedStringArray) -> void:
 			_process = true
 			if _ref.has(p):
 				is_hided = true
+				if is_visible:break
 			else:
 				is_visible = true
+				if is_hided:break
 
 	if _process:
 		# The translation in tool mode doesn't seem to work at the moment, I'll leave the code anyway.
