@@ -154,6 +154,7 @@ func _ready() -> void:
 		button.icon = preload("res://addons/Hidefolders/images/GuiVisibilityXray.svg")
 		button.toggle_mode = true
 		button.toggled.connect(_show_hide_enable)
+		button.button_pressed = _show_hidded_items
 		container.add_child(button)
 		container.move_child(button, container.get_child_count() - 2)
 		_buttons.append(button)
