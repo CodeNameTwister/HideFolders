@@ -149,7 +149,7 @@ func _ready() -> void:
 	var containers :  Array[Container] = find_button_container(dock)
 	for container : Container in containers:
 		var button : Button = Button.new()
-		button.tooltip_text = "Show/Hide Folders hidded"
+		button.tooltip_text = "Show/Hide Folders hider"
 		button.flat = true
 		button.icon = preload("res://addons/Hidefolders/images/GuiVisibilityXray.svg")
 		button.toggle_mode = true
