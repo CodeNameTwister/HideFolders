@@ -16,6 +16,9 @@ var _busy : bool = false
 
 var _menu_service : EditorContextMenuPlugin = null
 
+var _show_hidded_items : bool = true
+var _buttons : Array[Button] = []
+
 func _setup() -> void:
 	var dir : String = DOT_USER.get_base_dir()
 	if !DirAccess.dir_exists_absolute(dir):
@@ -25,6 +28,7 @@ func _setup() -> void:
 		var cfg : ConfigFile = ConfigFile.new()
 		if OK != cfg.load(DOT_USER):return
 		_buffer = cfg.get_value("DAT", "PTH", {})
+		_show_hidded_items = bool(cfg.get_value("ShowHideItems", "Enabled", true))
 
 #region callbacks
 func _moved_callback(a : String, b : String ) -> void:
@@ -83,6 +87,9 @@ func _explore(item : TreeItem) -> void:
 			item.set_icon_overlay(0, HIDE_ICON)
 			item.set_custom_color(0, Color.DARK_GRAY)
 			item.set_icon_modulate(0,c)
+			
+			item.visible = _show_hidded_items and item.get_parent().visible
+			
 			#TODO: Ignore totals and return now
 			if _flg_totals >= _buffer.size():
 				return
@@ -112,6 +119,18 @@ func _on_collapsed(item : TreeItem) -> void:
 		item.set_custom_color(0, Color.DARK_GRAY)
 		item.set_icon_modulate(0,c)
 
+# credits: collapse_folders
+func find_button_container(node: Node) -> Array[Container]:
+	var containers: Array[Container] = []
+	for child in node.get_children():
+		if child is MenuButton and child.tooltip_text == tr("Sort Files"):
+			containers.append(node)
+		
+		for container in find_button_container(child):
+			containers.append(container)
+
+	return containers
+
 func _ready() -> void:
 	var dock : FileSystemDock = EditorInterface.get_file_system_dock()
 	var fs : EditorFileSystem = EditorInterface.get_resource_filesystem()
@@ -126,6 +145,24 @@ func _ready() -> void:
 	dock.folder_color_changed.connect(_def_update)
 	fs.filesystem_changed.connect(_def_update)
 	_def_update()
+	
+	var containers :  Array[Container] = find_button_container(dock)
+	for container : Container in containers:
+		var button : Button = Button.new()
+		button.tooltip_text = "Show/Hide Folders hidded"
+		button.flat = true
+		button.icon = preload("res://addons/Hidefolders/images/GuiVisibilityXray.svg")
+		button.toggle_mode = true
+		button.toggled.connect(_show_hide_enable)
+		container.add_child(button)
+		container.move_child(button, container.get_child_count() - 2)
+		_buttons.append(button)
+		
+func _show_hide_enable(toggle : bool) -> void:
+	for b : Button in _buttons:
+		b.button_pressed = toggle
+	_show_hidded_items = !toggle
+	_def_update()
 
 func _enter_tree() -> void:
 	_setup()
@@ -133,7 +170,6 @@ func _enter_tree() -> void:
 	_menu_service = ResourceLoader.load("res://addons/Hidefolders/menu_item.gd").new()
 	_menu_service.ref_plug = self
 	_menu_service.hide_folders.connect(_on_hidde_cmd)
-
 
 
 func _exit_tree() -> void:
@@ -159,13 +195,18 @@ func _exit_tree() -> void:
 			_buffer.erase(k)
 			continue
 	cfg.set_value("DAT", "PTH", _buffer)
+	cfg.set_value("ShowHideItems", "Enabled", _show_hidded_items)
 	if OK != cfg.save(DOT_USER):
 		push_warning("Error on save HideFolders!")
+	cfg = null
 	#endregion
 
 	_menu_service = null
 	_buffer.clear()
-
+	
+	for x : Button in _buttons:
+		x.queue_free()
+	
 #region rescue_fav
 func _n(n : Node) -> bool:
 	if n is Tree:
