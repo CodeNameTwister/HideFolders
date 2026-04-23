@@ -22,6 +22,7 @@ In the godot file system, press RMB (right click) on any folder you want to **hi
 ![image](https://github.com/user-attachments/assets/415fc929-562b-476b-b45d-f5d619e00804)
 
 Toggle visibility
+
 ![image](https://github.com/CodeNameTwister/IgnoreFolders/raw/main/images/preview1.png)
 
 Copyrights (c) CodeNameTwister. See [LICENSE.md](LICENSE) for details.
