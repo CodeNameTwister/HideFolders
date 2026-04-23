@@ -6,17 +6,21 @@ extends EditorPlugin
 #	https://github.com/CodeNameTwister/HideFolders
 #	author:	"Twister"
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-const HIDE_ICON : Texture = preload("res://addons/Hidefolders/images/GuiVisibilityXray.svg")
 const DOT_USER : String = "user://editor/hiddenfolders.dat"
+const TIME_WAIT : int = 5
+const NEXT_FRAME : int = 1
+
+var HIDE_ICON : Texture = preload("res://addons/Hidefolders/images/GuiVisibilityXray.svg")
 
 var _buffer : Dictionary = {}
 var _flg_totals : int = 0
 var _tree : Tree = null
 var _busy : bool = false
+var _dlt : int = 0
 
 var _menu_service : EditorContextMenuPlugin = null
 
-var _show_hidded_items : bool = true
+var _show_hidded_items : bool = false
 var _buttons : Array[Button] = []
 
 func _setup() -> void:
@@ -31,11 +35,11 @@ func _setup() -> void:
 		_show_hidded_items = bool(cfg.get_value("ShowHideItems", "Enabled", true))
 
 #region callbacks
-func _moved_callback(a : String, b : String ) -> void:
-	if a != b:
-		if _buffer.has(a):
-			_buffer[b] = _buffer[a]
-			_buffer.erase(a)
+func _moved_callback(x : String, y : String ) -> void:
+	if x != y:
+		if _buffer.has(x):
+			_buffer[y] = _buffer[x]
+			_buffer.erase(x)
 
 func _remove_callback(path : String) -> void:
 	if _buffer.has(path):
@@ -53,10 +57,11 @@ func _on_hidde_cmd(paths : PackedStringArray) -> void:
 	if _buffer.has("res://"):
 		_buffer.erase("res://")
 	if _buffer.size() > 0:
-		_def_update()
+		_update()
 
-func _def_update() -> void:
-	update.call_deferred()
+func _update() -> void:
+	_dlt = 0
+	set_process(true)
 
 func update() -> void:
 	if _buffer.size() == 0:return
@@ -134,6 +139,8 @@ func find_button_container(node: Node) -> Array[Container]:
 func _ready() -> void:
 	var dock : FileSystemDock = EditorInterface.get_file_system_dock()
 	var fs : EditorFileSystem = EditorInterface.get_resource_filesystem()
+	set_process(false)
+	
 	_n(dock)
 
 	_tree.item_collapsed.connect(_on_collapsed)
@@ -142,28 +149,65 @@ func _ready() -> void:
 
 	dock.folder_moved.connect(_moved_callback)
 	dock.folder_removed.connect(_remove_callback)
-	dock.folder_color_changed.connect(_def_update)
-	fs.filesystem_changed.connect(_def_update)
-	_def_update()
+	dock.folder_color_changed.connect(_update)
+	fs.filesystem_changed.connect(_update)
 	
+	var scale : float = EditorInterface.get_editor_main_screen().get_theme_default_base_scale()
 	var containers :  Array[Container] = find_button_container(dock)
+	var osize : Vector2 = Vector2(16 * scale, 16 * scale)
+	
+	if scale != 1.0:
+		var _size : Vector2 = HIDE_ICON.get_size()
+		if _size != osize:
+			var img : Image = HIDE_ICON.get_image()
+			img.resize(int(osize.x), int(osize.y), Image.INTERPOLATE_NEAREST)
+			HIDE_ICON = ImageTexture.create_from_image(img)
+		
+	
 	for container : Container in containers:
 		var button : Button = Button.new()
 		button.tooltip_text = "Show/Hide Folders hider"
 		button.flat = true
-		button.icon = preload("res://addons/Hidefolders/images/GuiVisibilityXray.svg")
+		button.expand_icon = false
+		button.icon = HIDE_ICON
 		button.toggle_mode = true
+		button.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		button.custom_minimum_size = osize
 		button.toggled.connect(_show_hide_enable)
 		button.button_pressed = _show_hidded_items
 		container.add_child(button)
 		container.move_child(button, container.get_child_count() - 2)
 		_buttons.append(button)
 		
+	get_tree().create_timer(TIME_WAIT).timeout.connect(_update)
+	
+func _process(_delta: float) -> void:
+	_dlt += 1
+	if _dlt < NEXT_FRAME:
+		return
+	_dlt = 0
+	
+	var efs : EditorFileSystem = EditorInterface.get_resource_filesystem()
+	
+	if efs.is_scanning():
+		return
+		
+	if !get_tree().root.is_node_ready():
+		return
+	
+	set_process(false)
+	
+	var o : Object = self
+	if is_instance_valid(o):
+		update()
+		
 func _show_hide_enable(toggle : bool) -> void:
 	for b : Button in _buttons:
 		b.button_pressed = toggle
-	_show_hidded_items = !toggle
-	_def_update()
+		
+	_show_hidded_items = toggle
+		
+	_update()
 
 func _enter_tree() -> void:
 	_setup()
@@ -184,10 +228,10 @@ func _exit_tree() -> void:
 		dock.folder_moved.disconnect(_moved_callback)
 	if dock.folder_removed.is_connected(_remove_callback):
 		dock.folder_removed.disconnect(_remove_callback)
-	if dock.folder_color_changed.is_connected(_def_update):
-		dock.folder_color_changed.disconnect(_def_update)
-	if fs.filesystem_changed.is_connected(_def_update):
-		fs.filesystem_changed.disconnect(_def_update)
+	if dock.folder_color_changed.is_connected(_update):
+		dock.folder_color_changed.disconnect(_update)
+	if fs.filesystem_changed.is_connected(_update):
+		fs.filesystem_changed.disconnect(_update)
 
 	#region user_dat
 	var cfg : ConfigFile = ConfigFile.new()
@@ -205,8 +249,14 @@ func _exit_tree() -> void:
 	_menu_service = null
 	_buffer.clear()
 	
+	_update()
+		
 	for x : Button in _buttons:
 		x.queue_free()
+	
+	var file : EditorFileSystem = EditorInterface.get_resource_filesystem()
+	if file:
+		file.scan()
 	
 #region rescue_fav
 func _n(n : Node) -> bool:
