@@ -8,7 +8,7 @@ Allows you to mark a folder to hide all items it contains from being displayed i
 >[!WARNING]
 >The folder marked as hidden will not be visible in the project, but any references to the files within it will still work!
 >
->If you want to ignore the project folder so that the project doesn't use or scan it, you should use my other plugin called [Ignore Folders](https://github.com/CodeNameTwister/IgnoreFolders).
+>If you want to ignore the folder so the project doesn't use or scan it, you should use my other plugin called [Ignore Folders](https://github.com/CodeNameTwister/IgnoreFolders).
 
 ## Use Case
 This is useful if you want a cleaner file system in a project with many resource folders.
